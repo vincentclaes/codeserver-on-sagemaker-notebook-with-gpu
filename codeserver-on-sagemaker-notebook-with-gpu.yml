@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: >
+  Create a Sagemaker Notebook on a GPU instance with code-server pre-installed.
+
+Parameters:
+  GPUInstance:
+    Type: String
+    Default: ml.g4dn.xlarge
+    Description: >
+      Specify a GPU instance to create a Sagemaker Notebook on.
+      You can find the full list here: https://aws.amazon.com/sagemaker/pricing/
+
+Resources:
+  SagemakerNotebookInstance:
+    Type: AWS::SageMaker::NotebookInstance
+    Properties:
+      NotebookInstanceName: codeserver-on-sagemaker-notebook-with-gpu
+      InstanceType: !Ref GPUInstance
+      RoleArn: !GetAtt SageMakerRole.Arn
+      LifecycleConfigName: !GetAtt SagemakerNotebookInstanceLifecycleConfig.NotebookInstanceLifecycleConfigName
+      DirectInternetAccess: Enabled
+  SagemakerNotebookInstanceLifecycleConfig:
+    Type: AWS::SageMaker::NotebookInstanceLifecycleConfig
+    Properties:
+      NotebookInstanceLifecycleConfigName: codeserver-on-sagemaker-notebook-with-gpu
+      OnStart:
+        - Content:
+            Fn::Base64: |
+              #!/bin/bash
+
+              set -e
+              cd /home/ec2-user
+
+              # Got inspiration from here
+              # https://aws.amazon.com/blogs/machine-learning/host-code-server-on-amazon-sagemaker/              
+              sudo ./setup-codeserver.sh
+
+      OnCreate:
+        - Content:
+            Fn::Base64: |
+              #!/bin/bash
+
+              set -e
+              cd /home/ec2-user
+
+              # Got inspiration from here
+              # https://aws.amazon.com/blogs/machine-learning/host-code-server-on-amazon-sagemaker/
+
+              curl -LO https://github.com/aws-samples/amazon-sagemaker-codeserver/releases/download/v0.1.5/amazon-sagemaker-codeserver-0.1.5.tar.gz
+              tar -xvzf amazon-sagemaker-codeserver-0.1.5.tar.gz
+
+              cd amazon-sagemaker-codeserver/install-scripts/notebook-instances
+              
+              chmod +x install-codeserver.sh
+              chmod +x setup-codeserver.sh
+              sudo ./install-codeserver.sh
+              sudo ./setup-codeserver.sh
+
+  
+  SageMakerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: codeserver-on-sagemaker-notebook-with-gpu
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sagemaker.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref SagemakerPolicy
+      MaxSessionDuration: 3600
+
+  SagemakerPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: codeserver-on-sagemaker-notebook-with-gpu
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: S3
+            Effect: Allow
+            Action:
+              - s3:*
+            Resource:
+              - "*"
+          - Sid: Sagemaker
+            Effect: Allow
+            Action:
+              - sagemaker:*
+            Resource:
+              - "*"
+          - Sid: Cloudwatch
+            Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:DescribeLogGroups
+              - logs:GetLogGroupFields
+              - logs:CreateLogStream
+              - logs:DescribeLogStreams
+              - logs:PutLogEvents
+              - logs:GetLogEvents
+              - logs:FilterLogEvents
+            Resource:
+              - "*"
