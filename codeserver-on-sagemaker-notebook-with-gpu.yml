@@ -28,13 +28,13 @@ Resources:
         - Content:
             Fn::Base64: |
               #!/bin/bash
-
+              
               set -e
-              echo $PWD
-              ls -l
+              
               # Got inspiration from here
               # https://aws.amazon.com/blogs/machine-learning/host-code-server-on-amazon-sagemaker/              
-              sudo /home/ec2-user/setup-codeserver.sh
+              ls -l /home/ec2-user/amazon-sagemaker-codeserver/install-scripts/notebook-instances/
+              sudo /home/ec2-user/amazon-sagemaker-codeserver/install-scripts/notebook-instances/setup-codeserver.sh
 
       OnCreate:
         - Content:
@@ -43,13 +43,7 @@ Resources:
 
               set -e
               
-              echo $PWD
-              ls -l
-              
               cd /home/ec2-user
-              
-              echo $PWD
-              ls -l
 
               # Got inspiration from here
               # https://aws.amazon.com/blogs/machine-learning/host-code-server-on-amazon-sagemaker/
@@ -59,13 +53,14 @@ Resources:
 
               cd amazon-sagemaker-codeserver/install-scripts/notebook-instances
               
+              # show where we are for debugging purposes
+              echo $PWD
+              ls -l
+              
               chmod +x install-codeserver.sh
               chmod +x setup-codeserver.sh
               sudo ./install-codeserver.sh
               sudo ./setup-codeserver.sh
-              
-              echo $PWD
-              ls -l
 
   
   SageMakerRole:
