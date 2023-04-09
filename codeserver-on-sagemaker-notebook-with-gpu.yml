@@ -30,11 +30,11 @@ Resources:
               #!/bin/bash
 
               set -e
-              cd /home/ec2-user
-
+              echo $PWD
+              ls -l
               # Got inspiration from here
               # https://aws.amazon.com/blogs/machine-learning/host-code-server-on-amazon-sagemaker/              
-              sudo ./setup-codeserver.sh
+              sudo /home/ec2-user/setup-codeserver.sh
 
       OnCreate:
         - Content:
@@ -42,7 +42,14 @@ Resources:
               #!/bin/bash
 
               set -e
+              
+              echo $PWD
+              ls -l
+              
               cd /home/ec2-user
+              
+              echo $PWD
+              ls -l
 
               # Got inspiration from here
               # https://aws.amazon.com/blogs/machine-learning/host-code-server-on-amazon-sagemaker/
@@ -56,6 +63,9 @@ Resources:
               chmod +x setup-codeserver.sh
               sudo ./install-codeserver.sh
               sudo ./setup-codeserver.sh
+              
+              echo $PWD
+              ls -l
 
   
   SageMakerRole:
